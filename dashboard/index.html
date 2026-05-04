@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Energy Dashboard</title>
+    <style>
+        /* keeping it dark mode and clean */
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; text-align: center; }
+        .card {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-top: 50px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        h1 { color: #00ffcc; margin-bottom: 20px; }
+        p { font-size: 1.2rem; margin: 10px 0; }
+        .label { color: #888; font-size: 0.9rem; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Eindhoven Weather</h1>
+        <div>
+            <p class="label">Temperature</p>
+            <p id="temp">--</p>
+        </div>
+        <div>
+            <p class="label">Wind Speed</p>
+            <p id="wind">--</p>
+        </div>
+        <div>
+            <p class="label">Conditions</p>
+            <p id="status">--</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
