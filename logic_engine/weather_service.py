@@ -2,10 +2,12 @@ import os
 import requests
 from dotenv import load_dotenv
 
+# load the secrets from the .env file
 load_dotenv()
 
 
 def fetch_weather_data(city_name):
+    # grab the key from the environment
     api_key = os.getenv("WEATHER_API_KEY")
     base_url = "http://api.openweathermap.org/data/2.5/weather"
 
@@ -17,6 +19,7 @@ def fetch_weather_data(city_name):
 
     try:
         response = requests.get(base_url, params=params)
+        # check if the server is happy
         if response.status_code == 200:
             raw_data = response.json()
 
@@ -28,7 +31,14 @@ def fetch_weather_data(city_name):
                 "condition": raw_data["weather"][0].get("description")
             }
 
-            print(f"Clean data ready for {city_name}!")
+            # send the clean data to the node.js relay
+            relay_url = "http://localhost:3000/update-weather"
+            relay_response = requests.post(relay_url, json=clean_data)
+
+            # check if tier 2 actually caught it
+            if relay_response.status_code == 200:
+                print(f"Data successfully relayed to Tier 2")
+
             return clean_data
         else:
             print(f"Server said no: {response.status_code}")
@@ -37,7 +47,5 @@ def fetch_weather_data(city_name):
 
 
 if __name__ == "__main__":
-    # test the clean output
-    data = fetch_weather_data("Eindhoven")
-    if data:
-        print(data)
+    # check if the whole bridge works
+    fetch_weather_data("Eindhoven")
