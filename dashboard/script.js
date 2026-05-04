@@ -1,12 +1,7 @@
-// 1. march baseline data (mapped from your original usage)
-const marchLabels = Array.from({length: 31}, (_, i) => i + 1); // days 1 to 31
-const marchUsageData = [
-    11, 6, 10, 17, 19, 18, 22, 9, 15, 18,
-    16, 12, 16, 23, 5, 14, 12, 4, 5, 20,
-    15, 3, 3, 5, 15, 17, 17, 16, 13, 14, 15
-];
+// 1. march baseline labels (1 to 31)
+const marchLabels = Array.from({length: 31}, (_, i) => i + 1);
 
-// 2. initialize the chart with dual axes (y for kWh, y1 for Score)
+// 2. initialize the chart (Dual Axis: kWh on Left, Score on Right)
 const ctx = document.getElementById('weatherChart').getContext('2d');
 const myChart = new Chart(ctx, {
     data: {
@@ -15,101 +10,125 @@ const myChart = new Chart(ctx, {
             {
                 type: 'bar',
                 label: 'March Actual Usage (kWh)',
-                data: marchUsageData,
-                backgroundColor: 'rgba(255, 165, 0, 0.6)',
+                data: [11, 6, 10, 17, 19, 18, 22, 9, 15, 18, 16, 12, 16, 23, 5, 14, 12, 4, 5, 20, 15, 3, 3, 5, 15, 17, 17, 16, 13, 14, 15],
+                backgroundColor: 'rgba(255, 165, 0, 0.4)',
                 borderColor: 'orange',
                 borderWidth: 1,
-                yAxisID: 'y', // maps to the left axis
+                yAxisID: 'y',
                 order: 2
             },
             {
                 type: 'line',
                 label: 'Optimizer Trigger Score',
-                data: [], // filled by the relay
+                data: [], // filled by march_analysis.json
                 borderColor: '#00ffcc',
                 backgroundColor: '#00ffcc',
                 borderWidth: 2,
                 pointRadius: 3,
                 tension: 0.3,
-                yAxisID: 'y1', // maps to the right axis
+                yAxisID: 'y1',
                 order: 1
             }
         ]
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
             y: {
-                type: 'linear',
-                display: true,
-                position: 'left',
-                beginAtZero: true,
+                type: 'linear', position: 'left', beginAtZero: true,
                 title: { display: true, text: 'Energy Usage (kWh)', color: 'orange' },
                 grid: { color: '#333' }
             },
             y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                beginAtZero: true,
+                type: 'linear', position: 'right', beginAtZero: true,
                 title: { display: true, text: 'Optimizer Score', color: '#00ffcc' },
-                grid: { drawOnChartArea: false } // prevents messy double grid lines
+                grid: { drawOnChartArea: false }
             },
-            x: {
-                title: { display: true, text: 'Day of March', color: '#888' },
-                grid: { display: false }
-            }
+            x: { grid: { display: false }, ticks: { color: '#888' } }
         },
-        plugins: {
-            legend: { labels: { color: 'white' } }
-        }
+        plugins: { legend: { labels: { color: 'white' } } }
     }
 });
 
-// 3. grab data from our node.js relay (tier 2)
+// 3. the tab switcher logic
+// this fixes the "unclickable" issue by toggling the 'hidden' class
+function switchTab(tabName) {
+    const liveSec = document.getElementById('live-section');
+    const histSec = document.getElementById('historical-section');
+    const liveBtn = document.getElementById('tab-live');
+    const histBtn = document.getElementById('tab-history');
+
+    if (tabName === 'history') {
+        // show the archive, hide the live placeholder
+        histSec.classList.remove('hidden');
+        liveSec.classList.add('hidden');
+
+        // swap the glowing border on the buttons
+        histBtn.classList.add('active-tab');
+        liveBtn.classList.remove('active-tab');
+
+        // tell chart.js to redraw so it doesn't look squished
+        myChart.resize();
+    } else {
+        // back to the live monitor
+        histSec.classList.add('hidden');
+        liveSec.classList.remove('hidden');
+
+        liveBtn.classList.add('active-tab');
+        histBtn.classList.remove('active-tab');
+    }
+}
+
+// 4. the main data engine
 async function updateDashboard() {
     try {
-        // --- Part A: Update the Graph with 31-day data ---
+        // fetching the processed march data from the node relay
         const graphResponse = await fetch('http://localhost:3000/weather');
         const graphData = await graphResponse.json();
 
         if (Array.isArray(graphData)) {
-            const scores = graphData.map(day => day.trigger_score);
-            myChart.data.datasets[1].data = scores;
+            myChart.data.datasets[1].data = graphData.map(day => day.trigger_score);
             myChart.update();
-            console.log("graph line updated with analysis data");
+
+            let totalActual = 0;
+            let totalSmart = 0;
+
+            graphData.forEach(day => {
+                totalActual += day.actual_cost;
+                totalSmart += day.optimized_cost;
+            });
+
+            const totalSaved = totalActual - totalSmart;
+
+            document.getElementById('actual-bill').innerText = `€${totalActual.toFixed(2)}`;
+            document.getElementById('smart-bill').innerText = `€${totalSmart.toFixed(2)}`;
+            document.getElementById('total-saved').innerText = `€${totalSaved.toFixed(2)}`;
         }
 
-        // --- Part B: Update the Top Card with Live Python data ---
+        // grab the current live maastricht data
         const liveResponse = await fetch('http://localhost:3000/live-weather');
         const liveData = await liveResponse.json();
 
         if (liveData.city) {
-            // updates the title to maastricht
-            document.querySelector('h1').innerText = `${liveData.city} Weather`;
-
-            // update the live stats
+            document.getElementById('city-name').innerText = `${liveData.city} Weather`;
             document.getElementById('temp').innerText = `${Math.round(liveData.temp)}°C`;
             document.getElementById('wind').innerText = `${liveData.wind_speed} m/s`;
-            document.getElementById('status').innerText = liveData.condition;
 
-            // the logic for the "system standby" vs "preheating" badge
             const badge = document.getElementById('optimizer-status');
 
             if (liveData.preheat_status === true) {
                 badge.innerText = "OPTIMIZER ACTIVE: PREHEATING";
-                badge.className = "status-badge active";
+                badge.classList.add('active-glow');
             } else {
-                badge.innerText = liveData.status; // will show "SYSTEM ACTIVE"
-                badge.className = "status-badge active";
+                badge.innerText = "SYSTEM ACTIVE";
+                badge.classList.add('active-glow');
             }
-
-            console.log("dashboard updated with live trigger:", liveData.trigger_value);
         }
     } catch (err) {
-        console.log("couldnt grab data from relay:", err);
+        console.log("relay connection failed:", err);
     }
 }
 
-// 4. run the update on page load
+// 5. boot it up
 updateDashboard();

@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- fix that weird symbol issue -->
     <meta charset="UTF-8">
-    <title>Energy Dashboard</title>
+    <title>Energy & Savings Dashboard</title>
 
     <!-- grab chart.js from the web -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,24 +11,26 @@
         /* dark mode vibes */
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: #121212;
+            background: #0b0b0b;
             color: white;
-            text-align: center;
-            padding-bottom: 50px;
+            padding: 40px;
+            margin: 0;
         }
 
-        .card {
-            background: #1e1e1e;
+        /* Top Weather Card */
+        .weather-card {
+            background: #1a1a1a;
             padding: 30px;
-            border-radius: 15px;
-            display: inline-block;
-            margin-top: 50px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto 30px auto;
             border: 1px solid #333;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            min-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* the glowing badge for our logic engine */
+        h1 { color: #00ffcc; margin-bottom: 5px; }
+
         .status-badge {
             display: inline-block;
             padding: 5px 15px;
@@ -38,66 +39,162 @@
             font-weight: bold;
             text-transform: uppercase;
             margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        /* when the system is just chilling */
-        .inactive {
-            background: #333;
-            color: #888;
             border: 1px solid #444;
+            color: #888;
         }
 
-        /* when the 15% spike is detected */
-        .active {
-            background: rgba(0, 255, 204, 0.1);
-            color: #00ffcc;
+        .active-glow {
             border: 1px solid #00ffcc;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            color: #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+        }
+
+        /* --- Tab Navigation Styles --- */
+        .tab-container {
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .tab-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #888;
+            padding: 12px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover {
+            background: #252525;
+            color: white;
+        }
+
+        .active-tab {
+            border-color: #00ffcc;
+            color: #00ffcc;
+            background: rgba(0, 255, 204, 0.05);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
+        }
+
+        /* Dashboard Layout */
+        .dashboard-row {
+            display: flex;
+            gap: 25px;
+            align-items: stretch;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .chart-container {
-            width: 85%;
-            max-width: 800px;
-            margin: 50px auto;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 15px;
+            flex: 3;
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 20px;
             border: 1px solid #333;
         }
 
-        h1 { color: #00ffcc; margin-bottom: 10px; }
-        p { font-size: 1.5rem; margin: 10px 0; font-weight: bold; }
-        .label { color: #888; font-size: 0.9rem; text-transform: uppercase; font-weight: normal; }
+        .financial-box {
+            flex: 1;
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .price-label { color: #888; margin: 5px 0; font-size: 0.9rem; text-transform: uppercase; }
+        .price-value { color: white; font-size: 1.8em; font-weight: bold; display: block; margin-bottom: 20px; }
+        .smart-value { color: #00ffcc; }
+
+        .savings-highlight {
+            background: rgba(0, 255, 204, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px dashed #00ffcc;
+            text-align: center;
+        }
+
+        .total-saved-text {
+            color: #00ffcc;
+            font-size: 2.5em;
+            font-weight: 900;
+            display: block;
+        }
+
+        .sub-text { color: #666; font-size: 0.75em; margin-top: 10px; line-height: 1.4; }
+
+        /* helper to hide sections */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Eindhoven Weather</h1>
+    <!-- 1. LIVE WEATHER SECTION (Always Visible) -->
+    <div class="weather-card">
+        <h1 id="city-name">Maastricht Weather</h1>
+        <div id="optimizer-status" class="status-badge">System Active</div>
 
-        <!-- our proactive status indicator -->
-        <div id="optimizer-status" class="status-badge inactive">
-            System Standby
-        </div>
-
-        <div>
-            <p class="label">Temperature</p>
-            <p id="temp">--</p>
-        </div>
-        <div>
-            <p class="label">Wind Speed</p>
-            <p id="wind">--</p>
-        </div>
-        <div>
-            <p class="label">Conditions</p>
-            <p id="status">--</p>
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <div>
+                <p class="price-label">Temp</p>
+                <span id="temp" style="font-size: 2em; font-weight: bold;">--°C</span>
+            </div>
+            <div>
+                <p class="price-label">Wind</p>
+                <span id="wind" style="font-size: 2em; font-weight: bold;">-- m/s</span>
+            </div>
         </div>
     </div>
 
-    <!-- historical march data graph -->
-    <div class="chart-container">
-        <canvas id="weatherChart"></canvas>
+    <!-- 2. TAB NAVIGATION -->
+    <div class="tab-container">
+        <button id="tab-live" class="tab-btn active-tab" onclick="switchTab('live')">Live Monitor</button>
+        <button id="tab-history" class="tab-btn" onclick="switchTab('history')">Historical Archive (March)</button>
+    </div>
+
+    <!-- 3. LIVE MONITOR PLACEHOLDER -->
+    <div id="live-section" style="text-align: center; color: #555; margin-top: 60px;">
+        <p style="font-size: 1.2rem;">Live data stream active.</p>
+        <p>Current trigger score is being monitored in the background.</p>
+        <div style="margin-top: 20px; color: #333;">• • •</div>
+    </div>
+
+    <!-- 4. HISTORICAL ANALYSIS SECTION (Hidden by default) -->
+    <div id="historical-section" class="dashboard-row hidden">
+
+        <!-- Graph -->
+        <div class="chart-container">
+            <canvas id="weatherChart"></canvas>
+        </div>
+
+        <!-- Money Box -->
+        <div class="financial-box">
+            <div>
+                <h3 style="color: #00ffcc; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 15px;">March Archive</h3>
+
+                <p class="price-label">Actual Bill</p>
+                <span id="actual-bill" class="price-value">€0.00</span>
+
+                <p class="price-label">Optimized Smart Bill</p>
+                <span id="smart-bill" class="price-value smart-value">€0.00</span>
+            </div>
+
+            <div class="savings-highlight">
+                <p style="color: #00ffcc; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 10px 0;">Backtest Savings</p>
+                <span id="total-saved" class="total-saved-text">€0.00</span>
+                <p class="sub-text">Calculated using the aggressive 30-point threshold logic.</p>
+            </div>
+        </div>
     </div>
 
     <!-- logic bridge -->
