@@ -8,8 +8,8 @@ load_dotenv()
 
 def calculate_trigger_value(temp, wind_speed, indoor_target=20):
     """
-    Implements the formula from image_ab0635.png:
-    Trigger_Value = (Indoor_Target - Forecast_Temp) * (1 + Wind_Speed / 50)
+    implements the formula from image_ab0635.png:
+    trigger_value = (indoor_target - forecast_temp) * (1 + wind_speed / 50)
     """
     temp_gap = indoor_target - temp
     wind_factor = 1 + (wind_speed / 50)
@@ -19,7 +19,7 @@ def calculate_trigger_value(temp, wind_speed, indoor_target=20):
 def fetch_weather_data(city_name):
     # grab the key from the environment
     api_key = os.getenv("WEATHER_API_KEY")
-    # we switch to 'forecast' to see the future (T+3)
+    # we switch to 'forecast' to see the future (t+3)
     base_url = "http://api.openweathermap.org/data/2.5/forecast"
 
     params = {
@@ -39,7 +39,7 @@ def fetch_weather_data(city_name):
             curr_temp = current_weather['main']['temp']
             curr_wind = current_weather['wind']['speed']
 
-            # 2. get T+3 weather (the second item, as API gives 3 hour blocks)
+            # 2. get t+3 weather (the second item, as api gives 3 hour blocks)
             future_weather = raw_data['list'][1]
             fut_temp = future_weather['main']['temp']
             fut_wind = future_weather['wind']['speed']
@@ -71,15 +71,15 @@ def fetch_weather_data(city_name):
             if relay_response.status_code == 200:
                 print(f"Logic Engine: Current Trigger is {clean_data['trigger_value']}")
                 print(f"Logic Engine: Preheat Status is {preheat_status}")
-                print("Data successfully relayed to Tier 2")
+                print(f"Data successfully relayed to Tier 2 for {clean_data['city']}")
 
             return clean_data
         else:
-            print(f"Server said no: {response.status_code}")
+            print(f"server said no: {response.status_code}")
     except Exception as e:
-        print(f"Connection tanked: {e}")
+        print(f"connection tanked: {e}")
 
 
 if __name__ == "__main__":
-    # testing the predictive engine
-    fetch_weather_data("Eindhoven")
+    # testing the predictive engine for your home city
+    fetch_weather_data("Maastricht")

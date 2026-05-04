@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- fix that weird Â symbol once and for all -->
+    <!-- fix that weird symbol issue -->
     <meta charset="UTF-8">
     <title>Energy Dashboard</title>
 
-    <!-- load chart.js from the web so we can make graphs -->
+    <!-- grab chart.js from the web -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* keeping it dark mode and clean */
+        /* dark mode vibes */
         body {
             font-family: 'Segoe UI', sans-serif;
             background: #121212;
@@ -26,12 +26,39 @@
             margin-top: 50px;
             border: 1px solid #333;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            min-width: 300px;
+            min-width: 350px;
+        }
+
+        /* the glowing badge for our logic engine */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* when the system is just chilling */
+        .inactive {
+            background: #333;
+            color: #888;
+            border: 1px solid #444;
+        }
+
+        /* when the 15% spike is detected */
+        .active {
+            background: rgba(0, 255, 204, 0.1);
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
         }
 
         .chart-container {
-            width: 80%;
-            max-width: 700px;
+            width: 85%;
+            max-width: 800px;
             margin: 50px auto;
             background: #1e1e1e;
             padding: 20px;
@@ -39,16 +66,21 @@
             border: 1px solid #333;
         }
 
-        h1 { color: #00ffcc; margin-bottom: 20px; }
+        h1 { color: #00ffcc; margin-bottom: 10px; }
         p { font-size: 1.5rem; margin: 10px 0; font-weight: bold; }
         .label { color: #888; font-size: 0.9rem; text-transform: uppercase; font-weight: normal; }
     </style>
 </head>
 <body>
 
-    <!-- the weather readout card -->
     <div class="card">
         <h1>Eindhoven Weather</h1>
+
+        <!-- our proactive status indicator -->
+        <div id="optimizer-status" class="status-badge inactive">
+            System Standby
+        </div>
+
         <div>
             <p class="label">Temperature</p>
             <p id="temp">--</p>
@@ -63,12 +95,12 @@
         </div>
     </div>
 
-    <!-- the container for our chart -->
+    <!-- historical march data graph -->
     <div class="chart-container">
         <canvas id="weatherChart"></canvas>
     </div>
 
-    <!-- finally, load our logic -->
+    <!-- logic bridge -->
     <script src="script.js"></script>
 </body>
 </html>
