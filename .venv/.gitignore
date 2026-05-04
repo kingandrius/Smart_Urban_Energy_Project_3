@@ -13,3 +13,7 @@ __pycache__/
 
 # Environment variables (Security)
 .env
+
+# Node.js
+node_modules/
+npm-debug.log
