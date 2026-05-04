@@ -1,10 +1,10 @@
 import requests
 
 
-# This is your Tier 1 Logic Engine
+# the main LOGIC ENGINE
 def fetch_weather_data(city_name):
-    # For now, we use a placeholder API key.
-    # Later, we will move this to a secure .env file for security.
+    # placeholder API key
+
     api_key = "YOUR_API_KEY_HERE"
     base_url = "http://api.openweathermap.org/data/2.5/weather"
 
@@ -16,7 +16,7 @@ def fetch_weather_data(city_name):
 
     try:
         response = requests.get(base_url, params=params)
-        # Check if the "handshake" with the server was successful
+        # check handshake with server
         if response.status_code == 200:
             data = response.json()
             print(f"Successfully fetched data for {city_name}!")
@@ -28,5 +28,5 @@ def fetch_weather_data(city_name):
 
 
 if __name__ == "__main__":
-    # Test the logic
+    # test
     fetch_weather_data("Eindhoven")
