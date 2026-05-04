@@ -1,57 +1,86 @@
 import json
 import sys
+import requests
+import os
+from dotenv import load_dotenv
+
+# 1. load the environment variables
+# this pulls the secret key from your .env file so it stays off git
+load_dotenv()
 
 
-# 1. our core logic engine
-# we use the same (Target - Temp) * Wind Factor formula from the march analysis
+# 2. our core logic engine
+# keeping the same math so the strategy stays consistent with our march backtest
 def calculate_trigger_score(temp, wind):
     target_temp = 20
-    # ensure the wind factor doesn't zero out the score
     # wind factor increases the "impact" of the temperature deficit
     wind_factor = 1 + (wind / 10)
     score = (target_temp - temp) * wind_factor
     return round(score, 2)
 
 
-# 2. the strategy engine
-# generates a 4-point window to see if we need to preheat based on the T+3 outlook
+# 3. the real-world strategy engine
+# fetches actual maastricht data from openweathermap to fill the T+3 window
 def get_strategic_forecast():
-    # simulation of maastricht forecast (Now through +3h)
-    # this simulates a cold front coming in to test the optimizer response
-    forecast_data = [
-        {"hour": "Now", "temp": 16.2, "wind": 3.1},
-        {"hour": "+1h", "temp": 15.8, "wind": 4.5},
-        {"hour": "+2h", "temp": 14.1, "wind": 7.8},
-        {"hour": "+3h", "temp": 11.5, "wind": 10.2}
-    ]
+    # --- CONFIGURATION ---
+    # grabbing the key using your specific .env variable name
+    API_KEY = os.getenv("WEATHER_API_KEY")
+    CITY = "Maastricht"
 
-    processed_forecast = []
+    if not API_KEY:
+        print("Error: WEATHER_API_KEY not found in .env file")
+        return [{"hour": "Config Error", "temp": 0, "wind": 0, "score": 0}]
 
-    # run the numbers for every hour in our strategic window
-    for data in forecast_data:
-        score = calculate_trigger_score(data['temp'], data['wind'])
+    # we use the 'forecast' endpoint to get the hourly outlook
+    URL = f"https://api.openweathermap.org/data/2.5/forecast?q={CITY}&appid={API_KEY}&units=metric"
 
-        # packing the data for the script.js forecast cards
-        processed_forecast.append({
-            "hour": data['hour'],
-            "temp": data['temp'],
-            "wind": data['wind'],
-            "score": score
-        })
+    try:
+        response = requests.get(URL)
+        data = response.json()
 
-    return processed_forecast
+        # openweather forecast provides data in 3-hour chunks
+        # we'll grab the first 4 chunks to represent our strategic window
+        raw_list = data['list'][:4]
+
+        processed_forecast = []
+
+        # loop through the real data points
+        for i, entry in enumerate(raw_list):
+            temp = entry['main']['temp']
+            wind = entry['wind']['speed']
+
+            # run our custom optimizer math on the real numbers
+            score = calculate_trigger_score(temp, wind)
+
+            # formatting the label for the dashboard cards
+            # api chunks are 3 hours apart, so we label them accordingly
+            label = "Now" if i == 0 else f"+{i * 3}h"
+
+            processed_forecast.append({
+                "hour": label,
+                "temp": round(temp, 1),
+                "wind": round(wind, 1),
+                "score": score
+            })
+
+        return processed_forecast
+
+    except Exception as e:
+        print(f"API Error: {e}")
+        # fallback data so the dashboard doesn't go totally blank if the connection drops
+        return [{"hour": "Conn Error", "temp": 0, "wind": 0, "score": 0}]
 
 
-# 3. the bridge to the node relay
+# 4. the bridge to the node relay
 if __name__ == "__main__":
     try:
-        # generate our 4-point strategy array
+        # fetch the real strategic forecast
         result = get_strategic_forecast()
 
-        # printing as JSON so the node relay can catch it and send it to the dashboard
+        # printing as JSON so the node relay can catch it
         print(json.dumps(result))
 
     except Exception as e:
-        # fallback to prevent the dashboard from crashing if something breaks
+        # final safety net
         error_res = [{"score": 0, "error": str(e)}]
         print(json.dumps(error_res))
