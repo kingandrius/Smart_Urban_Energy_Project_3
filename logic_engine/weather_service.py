@@ -1,11 +1,14 @@
+import os
 import requests
+from dotenv import load_dotenv
+
+# load the secrets from the .env file
+load_dotenv()
 
 
-# the main LOGIC ENGINE
 def fetch_weather_data(city_name):
-    # placeholder API key
-
-    api_key = "YOUR_API_KEY_HERE"
+    # look for the variable name we set in the .env file
+    api_key = os.getenv("WEATHER_API_KEY")
     base_url = "http://api.openweathermap.org/data/2.5/weather"
 
     params = {
@@ -16,17 +19,18 @@ def fetch_weather_data(city_name):
 
     try:
         response = requests.get(base_url, params=params)
-        # check handshake with server
         if response.status_code == 200:
-            data = response.json()
-            print(f"Successfully fetched data for {city_name}!")
-            return data
+            print(f"Got the real deal for {city_name}!")
+            return response.json()
         else:
-            print(f"Error: Could not fetch data. Status Code: {response.status_code}")
+            # this will trigger if the key is wrong or missing
+            print(f"Server said no: {response.status_code}")
+            print(f"Check if WEATHER_API_KEY is correct in your .env")
     except Exception as e:
-        print(f"Connection error: {e}")
+        print(f"Connection tanked: {e}")
 
 
 if __name__ == "__main__":
-    # test
-    fetch_weather_data("Eindhoven")
+    data = fetch_weather_data("Eindhoven")
+    if data:
+        print(data)
