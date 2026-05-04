@@ -1,5 +1,6 @@
 // 1. march baseline labels (1 to 31)
 const marchLabels = Array.from({length: 31}, (_, i) => i + 1);
+const THRESHOLD = 30; // matches the aggressive python logic we pushed
 
 // 2. initialize the chart (Dual Axis: kWh on Left, Score on Right)
 const ctx = document.getElementById('weatherChart').getContext('2d');
@@ -52,7 +53,7 @@ const myChart = new Chart(ctx, {
 });
 
 // 3. the tab switcher logic
-// this fixes the "unclickable" issue by toggling the 'hidden' class
+// handles the toggle between live strategic view and historical backtesting
 function switchTab(tabName) {
     const liveSec = document.getElementById('live-section');
     const histSec = document.getElementById('historical-section');
@@ -60,32 +61,29 @@ function switchTab(tabName) {
     const histBtn = document.getElementById('tab-history');
 
     if (tabName === 'history') {
-        // show the archive, hide the live placeholder
         histSec.classList.remove('hidden');
         liveSec.classList.add('hidden');
-
-        // swap the glowing border on the buttons
         histBtn.classList.add('active-tab');
         liveBtn.classList.remove('active-tab');
 
-        // tell chart.js to redraw so it doesn't look squished
-        myChart.resize();
+        myChart.resize(); // force chart to fit container
+        updateHistoricalData();
     } else {
-        // back to the live monitor
         histSec.classList.add('hidden');
         liveSec.classList.remove('hidden');
-
         liveBtn.classList.add('active-tab');
         histBtn.classList.remove('active-tab');
+
+        updateLiveForecast();
     }
 }
 
-// 4. the main data engine
-async function updateDashboard() {
+// 4. historical engine
+// fetches march data to show the potential savings lab
+async function updateHistoricalData() {
     try {
-        // fetching the processed march data from the node relay
-        const graphResponse = await fetch('http://localhost:3000/weather');
-        const graphData = await graphResponse.json();
+        const response = await fetch('http://localhost:3000/weather');
+        const graphData = await response.json();
 
         if (Array.isArray(graphData)) {
             myChart.data.datasets[1].data = graphData.map(day => day.trigger_score);
@@ -93,42 +91,81 @@ async function updateDashboard() {
 
             let totalActual = 0;
             let totalSmart = 0;
-
             graphData.forEach(day => {
                 totalActual += day.actual_cost;
                 totalSmart += day.optimized_cost;
             });
 
-            const totalSaved = totalActual - totalSmart;
-
             document.getElementById('actual-bill').innerText = `€${totalActual.toFixed(2)}`;
             document.getElementById('smart-bill').innerText = `€${totalSmart.toFixed(2)}`;
-            document.getElementById('total-saved').innerText = `€${totalSaved.toFixed(2)}`;
-        }
-
-        // grab the current live maastricht data
-        const liveResponse = await fetch('http://localhost:3000/live-weather');
-        const liveData = await liveResponse.json();
-
-        if (liveData.city) {
-            document.getElementById('city-name').innerText = `${liveData.city} Weather`;
-            document.getElementById('temp').innerText = `${Math.round(liveData.temp)}°C`;
-            document.getElementById('wind').innerText = `${liveData.wind_speed} m/s`;
-
-            const badge = document.getElementById('optimizer-status');
-
-            if (liveData.preheat_status === true) {
-                badge.innerText = "OPTIMIZER ACTIVE: PREHEATING";
-                badge.classList.add('active-glow');
-            } else {
-                badge.innerText = "SYSTEM ACTIVE";
-                badge.classList.add('active-glow');
-            }
+            document.getElementById('total-saved').innerText = `€${(totalActual - totalSmart).toFixed(2)}`;
         }
     } catch (err) {
-        console.log("relay connection failed:", err);
+        console.log("historical relay failed:", err);
     }
 }
 
-// 5. boot it up
-updateDashboard();
+// 5. live strategic engine
+// handles the T+3 forecast cards and the preheating logic
+async function updateLiveForecast() {
+    try {
+        const response = await fetch('http://localhost:3000/live-weather');
+        const forecastData = await response.json(); // now expecting the 4-point array
+
+        const container = document.getElementById('forecast-row');
+        const strategyLabel = document.getElementById('strategy-label');
+        const statusBadge = document.getElementById('optimizer-status');
+
+        container.innerHTML = '';
+        let preheatNeeded = false;
+
+        forecastData.forEach((point, index) => {
+            const isAlert = point.score > THRESHOLD;
+            if (isAlert) preheatNeeded = true;
+
+            // update the main top card using the "Now" data
+            if (index === 0) {
+                document.getElementById('temp').innerText = `${Math.round(point.temp)}°C`;
+                document.getElementById('wind').innerText = `${point.wind} m/s`;
+            }
+
+            // build the individual forecast cards
+            const card = document.createElement('div');
+            card.className = `forecast-card ${isAlert ? 'trigger-warning' : ''}`;
+            card.innerHTML = `
+                <p style="color: #666; font-size: 0.7rem; margin: 0 0 10px 0; text-transform: uppercase;">
+                    ${index === 0 ? 'Now' : '+' + index + 'h'}
+                </p>
+                <span style="font-size: 1.4rem; font-weight: bold; display: block;">${point.temp}°C</span>
+                <span style="color: #888; font-size: 0.8rem;">${point.wind} m/s</span>
+                <div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+                    <span class="score-text" style="font-size: 0.9rem; font-weight: bold; color: #00ffcc;">${point.score}</span>
+                    <p style="font-size: 0.6rem; color: #555; margin: 2px 0 0 0;">SCORE</p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // final analysis for the strategy box and status badge
+        if (preheatNeeded) {
+            statusBadge.innerText = "OPTIMIZER ACTIVE: PREHEATING";
+            statusBadge.classList.add('active-glow');
+            strategyLabel.innerText = "STRATEGY: Incoming weather stress detected in T+3 window. Preheating authorized.";
+            strategyLabel.style.color = "#ffaa00";
+        } else {
+            statusBadge.innerText = "SYSTEM ACTIVE";
+            statusBadge.classList.remove('active-glow');
+            strategyLabel.innerText = "STRATEGY: Weather stable. No preheating required for the current window.";
+            strategyLabel.style.color = "#00ffcc";
+        }
+
+    } catch (err) {
+        console.log("live forecast relay failed:", err);
+        document.getElementById('forecast-row').innerHTML = '<p style="color: #444;">Relay connection lost...</p>';
+    }
+}
+
+// 6. boot it up
+window.onload = () => {
+    switchTab('live'); // start the user on the live monitor
+};

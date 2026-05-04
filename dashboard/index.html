@@ -17,7 +17,7 @@
             margin: 0;
         }
 
-        /* Top Weather Card */
+        /* Top Weather Card (Always Visible) */
         .weather-card {
             background: #1a1a1a;
             padding: 30px;
@@ -49,7 +49,7 @@
             box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
         }
 
-        /* --- Tab Navigation Styles --- */
+        /* --- Tab Navigation --- */
         .tab-container {
             max-width: 1200px;
             margin: 0 auto 40px auto;
@@ -84,7 +84,7 @@
             box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
         }
 
-        /* Dashboard Layout */
+        /* --- Historical Layout --- */
         .dashboard-row {
             display: flex;
             gap: 25px;
@@ -133,13 +133,44 @@
 
         .sub-text { color: #666; font-size: 0.75em; margin-top: 10px; line-height: 1.4; }
 
-        /* helper to hide sections */
+        /* --- Live Forecast Layout --- */
+        #forecast-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .forecast-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 15px;
+            width: 160px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-5px);
+            background: #222;
+        }
+
+        .trigger-warning {
+            border-color: #ffaa00 !important;
+            background: rgba(255, 170, 0, 0.05) !important;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.1);
+        }
+
+        /* Helper to hide sections */
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- 1. LIVE WEATHER SECTION (Always Visible) -->
+    <!-- 1. LIVE WEATHER SECTION (Primary Data) -->
     <div class="weather-card">
         <h1 id="city-name">Maastricht Weather</h1>
         <div id="optimizer-status" class="status-badge">System Active</div>
@@ -162,11 +193,27 @@
         <button id="tab-history" class="tab-btn" onclick="switchTab('history')">Historical Archive (March)</button>
     </div>
 
-    <!-- 3. LIVE MONITOR PLACEHOLDER -->
-    <div id="live-section" style="text-align: center; color: #555; margin-top: 60px;">
-        <p style="font-size: 1.2rem;">Live data stream active.</p>
-        <p>Current trigger score is being monitored in the background.</p>
-        <div style="margin-top: 20px; color: #333;">• • •</div>
+    <!-- 3. LIVE MONITOR (With T+3 Forecast) -->
+    <div id="live-section">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">
+                Strategic Forecast (T+3 Window)
+            </h2>
+        </div>
+
+        <div id="forecast-row">
+            <!-- Forecast cards will be dynamically injected here -->
+            <p style="color: #444;">Awaiting data stream...</p>
+        </div>
+
+        <div style="max-width: 650px; margin: 40px auto; padding: 25px; background: rgba(0, 255, 204, 0.05); border-radius: 15px; border: 1px solid #333; text-align: center;">
+            <p id="strategy-label" style="margin: 0; color: #00ffcc; font-weight: bold; font-size: 0.95rem;">
+                Analyzing incoming weather patterns...
+            </p>
+            <p style="color: #555; font-size: 0.75rem; margin-top: 10px;">
+                Optimizer evaluates temp drop and wind chill every 60 minutes.
+            </p>
+        </div>
     </div>
 
     <!-- 4. HISTORICAL ANALYSIS SECTION (Hidden by default) -->

@@ -9,16 +9,11 @@ const PORT = 3000;
 app.use(cors()); // security handshake for the frontend
 app.use(express.json());
 
-// this is the big one: tell node to actually show the website files from the dashboard folder
+// tell node to show the website files from the dashboard folder
 app.use(express.static(path.join(__dirname, '../dashboard')));
 
-// a little spot in memory to hold the current weather so the dashboard doesn't stay on standby
-let latestLiveWeather = {
-    status: "SYSTEM STANDBY",
-    temp: "--",
-    wind_speed: "--",
-    condition: "--"
-};
+// we now initialize this as an empty array to match our T+3 forecast logic
+let latestLiveForecast = [];
 
 // 2. the actual endpoints
 
@@ -27,41 +22,45 @@ app.get('/status', (req, res) => {
     res.send('Data Relay is up and running!');
 });
 
-// the big one for the graph: grab the 31-day analysis we crunched in python
+// the historical archive: grab the 31-day analysis from the logic_engine
 app.get('/weather', (req, res) => {
-    // reaching up and over to the logic_engine folder for the goods
     const dataPath = path.join(__dirname, '../logic_engine/march_analysis.json');
 
     fs.readFile(dataPath, 'utf8', (err, data) => {
         if (err) {
-            console.error("Couldn't find the json file. Did you run the python script?", err);
+            console.error("Couldn't find the json file:", err);
             return res.status(404).json({ error: "Analysis file missing" });
         }
-        // turn the file text back into json and send it to the frontend
         res.json(JSON.parse(data));
     });
 });
 
-// this fills in those dashes in the top card on the website
+// the live strategic route: serves the 4-point forecast to the frontend
 app.get('/live-weather', (req, res) => {
-    res.json(latestLiveWeather);
+    // if we haven't received data yet, send a dummy array so the frontend doesn't crash
+    if (latestLiveForecast.length === 0) {
+        return res.json([
+            { hour: "Now", temp: 0, wind: 0, score: 0 },
+            { hour: "+1h", temp: 0, wind: 0, score: 0 },
+            { hour: "+2h", temp: 0, wind: 0, score: 0 },
+            { hour: "+3h", temp: 0, wind: 0, score: 0 }
+        ]);
+    }
+    res.json(latestLiveForecast);
 });
 
-// where tier 1 (python) dumps the fresh weather data
+// where tier 1 (python) dumps the fresh T+3 forecast data
 app.post('/update-weather', (req, res) => {
-    // spread the new data in and flip the switch to active
-    latestLiveWeather = {
-        ...req.body,
-        status: "SYSTEM ACTIVE"
-    };
-    console.log('Just got new live data from Tier 1:', latestLiveWeather);
+    // python is now sending an array [{}, {}, {}, {}]
+    latestLiveForecast = req.body;
+
+    console.log('Strategy updated! T+3 window received from Tier 1.');
 
     // send a thumbs up back to python
-    res.status(200).json({ message: 'Data received by the relay!' });
+    res.status(200).json({ message: 'Forecast received by the relay!' });
 });
 
 // 3. fire it up
 app.listen(PORT, () => {
     console.log(`Relay server working on http://localhost:${PORT}`);
-    console.log(`Go here to see the actual dashboard: http://localhost:${PORT}`);
 });
