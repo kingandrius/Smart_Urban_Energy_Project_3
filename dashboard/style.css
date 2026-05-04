@@ -1,0 +1,186 @@
+/* 1. theme variable definitions (swaps based on data-theme attribute) */
+:root {
+    --bg-color: #0b0b0b;
+    --card-bg: #1a1a1a;
+    --text-main: white;
+    --text-dim: #888;
+    --border-color: #333;
+    --accent-color: #00ffcc;
+    --card-hover: #222;
+}
+
+/* light mode color overrides */
+[data-theme="light"] {
+    --bg-color: #f4f4f4;
+    --card-bg: #ffffff;
+    --text-main: #1a1a1a;
+    --text-dim: #555;
+    --border-color: #ddd;
+    --accent-color: #00a884;
+    --card-hover: #f9f9f9;
+}
+
+/* 2. base styles and transition logic */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    padding: 40px;
+    margin: 0;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* 3. primary weather card (the main display) */
+.weather-card {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto 30px auto;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: background 0.3s ease, border 0.3s ease;
+}
+
+h1 { color: var(--accent-color); margin-bottom: 5px; }
+
+/* status badge logic for the optimizer */
+.status-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    color: var(--text-dim);
+}
+
+.active-glow {
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+}
+
+/* 4. tab navigation styles */
+.tab-container {
+    max-width: 1200px;
+    margin: 0 auto 40px auto;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.tab-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-dim);
+    padding: 12px 30px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.tab-btn:hover {
+    background: var(--card-hover);
+    color: var(--text-main);
+}
+
+.active-tab {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(0, 255, 204, 0.05);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
+}
+
+/* 5. live forecast layout (T+3 window) */
+#forecast-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.forecast-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 15px;
+    width: 160px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.forecast-card:hover {
+    transform: translateY(-5px);
+    background: var(--card-hover);
+}
+
+/* warning state for when the optimizer triggers */
+.trigger-warning {
+    border-color: #ffaa00 !important;
+    background: rgba(255, 170, 0, 0.05) !important;
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.1);
+}
+
+/* 6. historical analysis layout */
+.dashboard-row {
+    display: flex;
+    gap: 25px;
+    align-items: stretch;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.chart-container {
+    flex: 3;
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    min-height: 400px;
+}
+
+.financial-box {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* labels and typography for the bill display */
+.price-label { color: var(--text-dim); margin: 5px 0; font-size: 0.9rem; text-transform: uppercase; }
+.price-value { color: var(--text-main); font-size: 1.8em; font-weight: bold; display: block; margin-bottom: 20px; }
+.smart-value { color: var(--accent-color); }
+
+.savings-highlight {
+    background: rgba(0, 255, 204, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px dashed var(--accent-color);
+    text-align: center;
+}
+
+.total-saved-text {
+    color: var(--accent-color);
+    font-size: 2.5em;
+    font-weight: 900;
+    display: block;
+}
+
+.sub-text { color: var(--text-dim); font-size: 0.75em; margin-top: 10px; line-height: 1.4; }
+
+/* 7. utility classes */
+.hidden { display: none !important; }

@@ -14,7 +14,6 @@ function switchTab(tabName) {
     const liveBtn = document.getElementById('tab-live');
     const histBtn = document.getElementById('tab-history');
 
-    // safety check to prevent script crashes if elements are missing
     if (!liveSec || !histSec) return;
 
     if (tabName === 'history') {
@@ -23,7 +22,6 @@ function switchTab(tabName) {
         if (histBtn) histBtn.classList.add('active-tab');
         if (liveBtn) liveBtn.classList.remove('active-tab');
 
-        // force chart to fit container and refresh data
         if (myChart) {
             myChart.resize();
             updateHistoricalData();
@@ -49,17 +47,15 @@ async function updateLiveForecast() {
         const strategyLabel = document.getElementById('strategy-label');
         const statusBadge = document.getElementById('optimizer-status');
 
-        if (!container) return; // safety catch for the DOM
+        if (!container) return;
 
         container.innerHTML = '';
         let preheatNeeded = false;
 
         forecastData.forEach((point, index) => {
-            // check if any point in the 9-hour window hits our threshold
             const isAlert = point.score > THRESHOLD;
             if (isAlert) preheatNeeded = true;
 
-            // update the main top card using the "Now" data
             if (index === 0) {
                 const tempEl = document.getElementById('temp');
                 const windEl = document.getElementById('wind');
@@ -67,25 +63,22 @@ async function updateLiveForecast() {
                 if (windEl) windEl.innerText = `${point.wind} m/s`;
             }
 
-            // build the individual forecast cards
-            // note: real API gives 3h jumps, so we label Now, +3h, +6h, +9h
             const label = index === 0 ? 'Now' : `+${index * 3}h`;
 
             const card = document.createElement('div');
             card.className = `forecast-card ${isAlert ? 'trigger-warning' : ''}`;
             card.innerHTML = `
-                <p style="color: #666; font-size: 0.7rem; margin: 0 0 10px 0; text-transform: uppercase;">${label}</p>
+                <p style="color: var(--text-dim); font-size: 0.7rem; margin: 0 0 10px 0; text-transform: uppercase;">${label}</p>
                 <span style="font-size: 1.4rem; font-weight: bold; display: block;">${point.temp}°C</span>
-                <span style="color: #888; font-size: 0.8rem;">${point.wind} m/s</span>
-                <div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
-                    <span class="score-text" style="font-size: 0.9rem; font-weight: bold; color: ${isAlert ? 'orange' : '#00ffcc'};">${point.score}</span>
-                    <p style="font-size: 0.6rem; color: #555; margin: 2px 0 0 0;">SCORE</p>
+                <span style="color: var(--text-dim); font-size: 0.8rem;">${point.wind} m/s</span>
+                <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <span class="score-text" style="font-size: 0.9rem; font-weight: bold; color: ${isAlert ? 'orange' : 'var(--accent-color)'};">${point.score}</span>
+                    <p style="font-size: 0.6rem; color: var(--text-dim); margin: 2px 0 0 0;">SCORE</p>
                 </div>
             `;
             container.appendChild(card);
         });
 
-        // final analysis for the strategy box and status badge
         if (statusBadge && strategyLabel) {
             if (preheatNeeded) {
                 statusBadge.innerText = "OPTIMIZER ACTIVE: PREHEATING";
@@ -96,14 +89,14 @@ async function updateLiveForecast() {
                 statusBadge.innerText = "SYSTEM ACTIVE";
                 statusBadge.classList.remove('active-glow');
                 strategyLabel.innerText = "STRATEGY: Weather stable. No preheating required for the current window.";
-                strategyLabel.style.color = "#00ffcc";
+                strategyLabel.style.color = "var(--accent-color)";
             }
         }
 
     } catch (err) {
         console.log("live forecast relay failed:", err);
         const container = document.getElementById('forecast-row');
-        if (container) container.innerHTML = '<p style="color: #444;">Awaiting data stream...</p>';
+        if (container) container.innerHTML = '<p style="color: var(--text-dim);">Awaiting data stream...</p>';
     }
 }
 
@@ -115,11 +108,16 @@ async function updateHistoricalData() {
         const graphData = await response.json();
 
         if (Array.isArray(graphData) && myChart) {
-            // update the line chart with the historical trigger scores
             myChart.data.datasets[1].data = graphData.map(day => day.trigger_score);
+
+            // update chart colors based on current theme for readability
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            myChart.options.scales.x.ticks.color = isLight ? '#555' : '#888';
+            myChart.options.scales.y.ticks.color = isLight ? '#555' : '#888';
+            myChart.options.plugins.legend.labels.color = isLight ? '#1a1a1a' : 'white';
+
             myChart.update();
 
-            // calculate totals for the financial dashboard
             let totalActual = 0;
             let totalSmart = 0;
             graphData.forEach(day => {
@@ -136,9 +134,35 @@ async function updateHistoricalData() {
     }
 }
 
-// 5. boot up logic
+// 5. theme toggle engine
+// handles the switch between dark and light modes via css variables
+function initTheme() {
+    const themeBtn = document.getElementById('theme-toggle');
+    if (!themeBtn) return;
+
+    themeBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('selected-theme', newTheme);
+
+        // refresh chart if visible to update label colors
+        if (myChart) updateHistoricalData();
+    });
+
+    // check for saved preference
+    const savedTheme = localStorage.getItem('selected-theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+}
+
+// 6. boot up logic
 // initializes chart and starts the user on the live monitor
 window.onload = () => {
+    initTheme(); // initialize theme engine first
+
     const chartCanvas = document.getElementById('weatherChart');
     if (chartCanvas) {
         const ctx = chartCanvas.getContext('2d');
@@ -159,7 +183,7 @@ window.onload = () => {
                     {
                         type: 'line',
                         label: 'Optimizer Trigger Score',
-                        data: [], // populated via updateHistoricalData
+                        data: [],
                         borderColor: '#00ffcc',
                         backgroundColor: '#00ffcc',
                         borderWidth: 2,
@@ -175,14 +199,14 @@ window.onload = () => {
                 maintainAspectRatio: false,
                 scales: {
                     y: { type: 'linear', position: 'left', beginAtZero: true },
-                    y1: { type: 'linear', position: 'right', beginAtZero: true }
+                    y1: { type: 'linear', position: 'right', beginAtZero: true },
+                    x: { ticks: { color: '#888' } }
                 },
                 plugins: { legend: { labels: { color: 'white' } } }
             }
         });
     }
 
-    // set the default tab and start refresh cycle
     switchTab('live');
     setInterval(updateLiveForecast, 60000);
 };

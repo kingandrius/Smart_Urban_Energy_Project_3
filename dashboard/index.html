@@ -4,173 +4,22 @@
     <meta charset="UTF-8">
     <title>Energy & Savings Dashboard</title>
 
+    <!-- 1. the style layer (separate css file with theme variables) -->
+    <link rel="stylesheet" href="style.css">
+
     <!-- grab chart.js from the web -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        /* dark mode vibes */
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #0b0b0b;
-            color: white;
-            padding: 40px;
-            margin: 0;
-        }
-
-        /* Top Weather Card (Always Visible) */
-        .weather-card {
-            background: #1a1a1a;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 500px;
-            margin: 0 auto 30px auto;
-            border: 1px solid #333;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        h1 { color: #00ffcc; margin-bottom: 5px; }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            border: 1px solid #444;
-            color: #888;
-        }
-
-        .active-glow {
-            border: 1px solid #00ffcc;
-            color: #00ffcc;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-        }
-
-        /* --- Tab Navigation --- */
-        .tab-container {
-            max-width: 1200px;
-            margin: 0 auto 40px auto;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .tab-btn {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: #888;
-            padding: 12px 30px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-        }
-
-        .tab-btn:hover {
-            background: #252525;
-            color: white;
-        }
-
-        .active-tab {
-            border-color: #00ffcc;
-            color: #00ffcc;
-            background: rgba(0, 255, 204, 0.05);
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
-        }
-
-        /* --- Historical Layout --- */
-        .dashboard-row {
-            display: flex;
-            gap: 25px;
-            align-items: stretch;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .chart-container {
-            flex: 3;
-            background: #1a1a1a;
-            padding: 25px;
-            border-radius: 20px;
-            border: 1px solid #333;
-        }
-
-        .financial-box {
-            flex: 1;
-            background: #1a1a1a;
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .price-label { color: #888; margin: 5px 0; font-size: 0.9rem; text-transform: uppercase; }
-        .price-value { color: white; font-size: 1.8em; font-weight: bold; display: block; margin-bottom: 20px; }
-        .smart-value { color: #00ffcc; }
-
-        .savings-highlight {
-            background: rgba(0, 255, 204, 0.05);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px dashed #00ffcc;
-            text-align: center;
-        }
-
-        .total-saved-text {
-            color: #00ffcc;
-            font-size: 2.5em;
-            font-weight: 900;
-            display: block;
-        }
-
-        .sub-text { color: #666; font-size: 0.75em; margin-top: 10px; line-height: 1.4; }
-
-        /* --- Live Forecast Layout --- */
-        #forecast-row {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .forecast-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            padding: 20px;
-            border-radius: 15px;
-            width: 160px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .forecast-card:hover {
-            transform: translateY(-5px);
-            background: #222;
-        }
-
-        .trigger-warning {
-            border-color: #ffaa00 !important;
-            background: rgba(255, 170, 0, 0.05) !important;
-            box-shadow: 0 0 15px rgba(255, 170, 0, 0.1);
-        }
-
-        /* Helper to hide sections */
-        .hidden { display: none !important; }
-    </style>
 </head>
 <body>
 
-    <!-- 1. LIVE WEATHER SECTION (Primary Data) -->
+    <!-- 1. THEME TOGGLE (Utility Button) -->
+    <div style="text-align: right; max-width: 500px; margin: 0 auto 10px auto;">
+        <button id="theme-toggle" class="tab-btn" style="padding: 8px 15px; font-size: 0.7rem;">
+            🌓 Switch Theme
+        </button>
+    </div>
+
+    <!-- 2. LIVE WEATHER SECTION (Primary Data) -->
     <div class="weather-card">
         <h1 id="city-name">Maastricht Weather</h1>
         <div id="optimizer-status" class="status-badge">System Active</div>
@@ -187,36 +36,36 @@
         </div>
     </div>
 
-    <!-- 2. TAB NAVIGATION -->
+    <!-- 3. TAB NAVIGATION -->
     <div class="tab-container">
         <button id="tab-live" class="tab-btn active-tab" onclick="switchTab('live')">Live Monitor</button>
         <button id="tab-history" class="tab-btn" onclick="switchTab('history')">Historical Archive (March)</button>
     </div>
 
-    <!-- 3. LIVE MONITOR (With T+3 Forecast) -->
+    <!-- 4. LIVE MONITOR (With T+3 Forecast) -->
     <div id="live-section">
         <div style="text-align: center; margin-bottom: 30px;">
-            <h2 style="color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">
+            <h2 style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">
                 Strategic Forecast (T+3 Window)
             </h2>
         </div>
 
         <div id="forecast-row">
-            <!-- Forecast cards will be dynamically injected here -->
+            <!-- Forecast cards will be dynamically injected here via script.js -->
             <p style="color: #444;">Awaiting data stream...</p>
         </div>
 
-        <div style="max-width: 650px; margin: 40px auto; padding: 25px; background: rgba(0, 255, 204, 0.05); border-radius: 15px; border: 1px solid #333; text-align: center;">
-            <p id="strategy-label" style="margin: 0; color: #00ffcc; font-weight: bold; font-size: 0.95rem;">
+        <div style="max-width: 650px; margin: 40px auto; padding: 25px; background: rgba(0, 255, 204, 0.05); border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
+            <p id="strategy-label" style="margin: 0; color: var(--accent-color); font-weight: bold; font-size: 0.95rem;">
                 Analyzing incoming weather patterns...
             </p>
-            <p style="color: #555; font-size: 0.75rem; margin-top: 10px;">
+            <p style="color: var(--text-dim); font-size: 0.75rem; margin-top: 10px;">
                 Optimizer evaluates temp drop and wind chill every 60 minutes.
             </p>
         </div>
     </div>
 
-    <!-- 4. HISTORICAL ANALYSIS SECTION (Hidden by default) -->
+    <!-- 5. HISTORICAL ANALYSIS SECTION (Hidden by default) -->
     <div id="historical-section" class="dashboard-row hidden">
 
         <!-- Graph -->
@@ -227,7 +76,7 @@
         <!-- Money Box -->
         <div class="financial-box">
             <div>
-                <h3 style="color: #00ffcc; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 15px;">March Archive</h3>
+                <h3 style="color: var(--accent-color); margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">March Archive</h3>
 
                 <p class="price-label">Actual Bill</p>
                 <span id="actual-bill" class="price-value">€0.00</span>
@@ -237,7 +86,7 @@
             </div>
 
             <div class="savings-highlight">
-                <p style="color: #00ffcc; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 10px 0;">Backtest Savings</p>
+                <p style="color: var(--accent-color); font-size: 0.8em; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 10px 0;">Backtest Savings</p>
                 <span id="total-saved" class="total-saved-text">€0.00</span>
                 <p class="sub-text">Calculated using the aggressive 30-point threshold logic.</p>
             </div>
