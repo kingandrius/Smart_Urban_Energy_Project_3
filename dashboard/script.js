@@ -32,15 +32,18 @@ function switchTab(tabName) {
         if (liveBtn) liveBtn.classList.add('active-tab');
         if (histBtn) histBtn.classList.remove('active-tab');
 
-        updateLiveForecast();
+        // refresh live view for currently selected city
+        const currentCity = document.getElementById('city-selector').value;
+        updateLiveForecast(currentCity);
     }
 }
 
 // 3. live strategic engine
 // handles the T+3 forecast cards and the predictive preheating logic
-async function updateLiveForecast() {
+async function updateLiveForecast(city = "Maastricht") {
     try {
-        const response = await fetch(RELAY_URL);
+        // passing city as a query parameter to the backend relay
+        const response = await fetch(`${RELAY_URL}?city=${city}`);
         const forecastData = await response.json();
 
         const container = document.getElementById('forecast-row');
@@ -83,7 +86,7 @@ async function updateLiveForecast() {
             if (preheatNeeded) {
                 statusBadge.innerText = "OPTIMIZER ACTIVE: PREHEATING";
                 statusBadge.classList.add('active-glow');
-                strategyLabel.innerText = "STRATEGY: Incoming weather stress detected in T+3 window. Preheating authorized.";
+                strategyLabel.innerText = `STRATEGY: Incoming weather stress detected in ${city}. Preheating authorized.`;
                 strategyLabel.style.color = "#ffaa00";
             } else {
                 statusBadge.innerText = "SYSTEM ACTIVE";
@@ -151,17 +154,32 @@ function initTheme() {
         if (myChart) updateHistoricalData();
     });
 
-    // check for saved preference
     const savedTheme = localStorage.getItem('selected-theme');
     if (savedTheme) {
         document.documentElement.setAttribute('data-theme', savedTheme);
     }
 }
 
-// 6. boot up logic
-// initializes chart and starts the user on the live monitor
+// 6. city selector engine
+// initializes the dropdown listener to update data on change
+function initCitySelector() {
+    const citySelector = document.getElementById('city-selector');
+    if (!citySelector) return;
+
+    citySelector.addEventListener('change', (e) => {
+        const selectedCity = e.target.value;
+        // update the heading text
+        document.getElementById('city-name').innerText = `${selectedCity} Weather`;
+        // trigger a new fetch for the new location
+        updateLiveForecast(selectedCity);
+    });
+}
+
+// 7. boot up logic
+// initializes engines, chart, and starts the refresh cycle
 window.onload = () => {
-    initTheme(); // initialize theme engine first
+    initTheme();
+    initCitySelector();
 
     const chartCanvas = document.getElementById('weatherChart');
     if (chartCanvas) {
@@ -208,5 +226,10 @@ window.onload = () => {
     }
 
     switchTab('live');
-    setInterval(updateLiveForecast, 60000);
+
+    // update every 60 seconds using the currently selected city
+    setInterval(() => {
+        const currentCity = document.getElementById('city-selector').value;
+        updateLiveForecast(currentCity);
+    }, 60000);
 };

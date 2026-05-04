@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors'); // let the browser talk to the server
 const fs = require('fs');     // added to read the json file
 const path = require('path');   // added to handle folder paths
+const { spawn } = require('child_process'); // engine for triggering python on the fly
 const app = express();
 const PORT = 3000;
 
@@ -11,9 +12,6 @@ app.use(express.json());
 
 // tell node to show the website files from the dashboard folder
 app.use(express.static(path.join(__dirname, '../dashboard')));
-
-// we now initialize this as an empty array to match our T+3 forecast logic
-let latestLiveForecast = [];
 
 // 2. the actual endpoints
 
@@ -35,29 +33,58 @@ app.get('/weather', (req, res) => {
     });
 });
 
-// the live strategic route: serves the 4-point forecast to the frontend
+// the live strategic route: now actively triggers python for city switching
 app.get('/live-weather', (req, res) => {
-    // if we haven't received data yet, send a dummy array so the frontend doesn't crash
-    if (latestLiveForecast.length === 0) {
-        return res.json([
-            { hour: "Now", temp: 0, wind: 0, score: 0 },
-            { hour: "+1h", temp: 0, wind: 0, score: 0 },
-            { hour: "+2h", temp: 0, wind: 0, score: 0 },
-            { hour: "+3h", temp: 0, wind: 0, score: 0 }
-        ]);
-    }
-    res.json(latestLiveForecast);
+    // grab city from frontend query (e.g., ?city=London). defaults to maastricht.
+    const city = req.query.city || 'Maastricht';
+
+    console.log(`Frontend requested data for: ${city}`);
+
+    // trigger tier 1 (python) and pass the city as a command line argument
+    // note: updated filename to live_weather.py based on your folder structure
+    const pythonProcess = spawn('python', [
+        path.join(__dirname, '../logic_engine/live_weather.py'),
+        city
+    ]);
+
+    let dataString = '';
+    let errorString = '';
+
+    // collect chunks of data coming from python's print statements
+    pythonProcess.stdout.on('data', (data) => {
+        dataString += data.toString();
+    });
+
+    // CRITICAL: catch errors (like missing libraries or api key issues)
+    pythonProcess.stderr.on('data', (data) => {
+        errorString += data.toString();
+    });
+
+    // once python finishes, parse the output and send it back to the dashboard
+    pythonProcess.on('close', (code) => {
+        if (errorString) {
+            console.error(`Python Logic Error: ${errorString}`);
+        }
+
+        try {
+            if (dataString) {
+                const parsedData = JSON.parse(dataString);
+                res.json(parsedData);
+            } else {
+                console.error("Python returned no data. Check for errors above.");
+                res.status(500).json({ error: "No data received from logic engine" });
+            }
+        } catch (e) {
+            console.error("Failed to parse Python output:", dataString);
+            res.status(500).json({ error: "Invalid data format from script" });
+        }
+    });
 });
 
-// where tier 1 (python) dumps the fresh T+3 forecast data
+// legacy endpoint: where python used to dump data (kept for safety)
 app.post('/update-weather', (req, res) => {
-    // python is now sending an array [{}, {}, {}, {}]
-    latestLiveForecast = req.body;
-
-    console.log('Strategy updated! T+3 window received from Tier 1.');
-
-    // send a thumbs up back to python
-    res.status(200).json({ message: 'Forecast received by the relay!' });
+    console.log('Post received! Note: System is moving toward active GET requests.');
+    res.status(200).json({ message: 'Sync successful' });
 });
 
 // 3. fire it up

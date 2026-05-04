@@ -21,6 +21,18 @@
 
     <!-- 2. LIVE WEATHER SECTION (Primary Data) -->
     <div class="weather-card">
+
+        <!-- city selection dropdown -->
+        <div style="margin-bottom: 20px;">
+            <select id="city-selector" class="tab-btn" style="text-transform: none; padding: 5px 15px; font-size: 0.7rem; border-color: var(--accent-color);">
+                <option value="Maastricht">Maastricht, NL</option>
+                <option value="Amsterdam">Amsterdam, NL</option>
+                <option value="London">London, UK</option>
+                <option value="Berlin">Berlin, DE</option>
+                <option value="Paris">Paris, FR</option>
+            </select>
+        </div>
+
         <h1 id="city-name">Maastricht Weather</h1>
         <div id="optimizer-status" class="status-badge">System Active</div>
 

@@ -20,31 +20,29 @@ def calculate_trigger_score(temp, wind):
 
 
 # 3. the real-world strategy engine
-# fetches actual maastricht data from openweathermap to fill the T+3 window
-def get_strategic_forecast():
+# now accepts a city argument passed from the node relay
+def get_strategic_forecast(city_name):
     # --- CONFIGURATION ---
-    # grabbing the key using your specific .env variable name
     API_KEY = os.getenv("WEATHER_API_KEY")
-    CITY = "Maastricht"
 
     if not API_KEY:
-        print("Error: WEATHER_API_KEY not found in .env file")
         return [{"hour": "Config Error", "temp": 0, "wind": 0, "score": 0}]
 
-    # we use the 'forecast' endpoint to get the hourly outlook
-    URL = f"https://api.openweathermap.org/data/2.5/forecast?q={CITY}&appid={API_KEY}&units=metric"
+    # we use the city_name variable instead of a hardcoded string
+    URL = f"https://api.openweathermap.org/data/2.5/forecast?q={city_name}&appid={API_KEY}&units=metric"
 
     try:
         response = requests.get(URL)
         data = response.json()
 
-        # openweather forecast provides data in 3-hour chunks
-        # we'll grab the first 4 chunks to represent our strategic window
-        raw_list = data['list'][:4]
+        # safety check: if openweather can't find the city (404), return a clean error
+        if data.get("cod") != "200":
+            return [{"hour": "City Not Found", "temp": 0, "wind": 0, "score": 0}]
 
+        # openweather forecast provides data in 3-hour chunks
+        raw_list = data['list'][:4]
         processed_forecast = []
 
-        # loop through the real data points
         for i, entry in enumerate(raw_list):
             temp = entry['main']['temp']
             wind = entry['wind']['speed']
@@ -53,7 +51,6 @@ def get_strategic_forecast():
             score = calculate_trigger_score(temp, wind)
 
             # formatting the label for the dashboard cards
-            # api chunks are 3 hours apart, so we label them accordingly
             label = "Now" if i == 0 else f"+{i * 3}h"
 
             processed_forecast.append({
@@ -66,18 +63,24 @@ def get_strategic_forecast():
         return processed_forecast
 
     except Exception as e:
-        print(f"API Error: {e}")
-        # fallback data so the dashboard doesn't go totally blank if the connection drops
+        # fallback data for connection drops
         return [{"hour": "Conn Error", "temp": 0, "wind": 0, "score": 0}]
 
 
 # 4. the bridge to the node relay
 if __name__ == "__main__":
     try:
-        # fetch the real strategic forecast
-        result = get_strategic_forecast()
+        # grab the city name from the command line argument (sys.argv[1])
+        # if no argument is provided, we default to Maastricht
+        try:
+            target_city = sys.argv[1]
+        except IndexError:
+            target_city = "Maastricht"
 
-        # printing as JSON so the node relay can catch it
+        # fetch the real strategic forecast for the chosen city
+        result = get_strategic_forecast(target_city)
+
+        # printing as JSON so the node relay can catch it via stdout
         print(json.dumps(result))
 
     except Exception as e:
