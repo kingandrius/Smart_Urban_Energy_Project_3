@@ -1,13 +1,12 @@
 // 1. configuration & baseline data
 const RELAY_URL = 'http://localhost:3000/live-weather';
 const ARCHIVE_URL = 'http://localhost:3000/weather';
-const THRESHOLD = 30; // the aggressive trigger from our march backtest
+const THRESHOLD = 30;
 const marchLabels = Array.from({length: 31}, (_, i) => i + 1);
 
-let myChart; // global holder for the chart.js instance
+let myChart;
 
 // 2. the tab switcher logic
-// handles the toggle between live strategic view and historical backtesting
 function switchTab(tabName) {
     const liveSec = document.getElementById('live-section');
     const histSec = document.getElementById('historical-section');
@@ -32,17 +31,14 @@ function switchTab(tabName) {
         if (liveBtn) liveBtn.classList.add('active-tab');
         if (histBtn) histBtn.classList.remove('active-tab');
 
-        // refresh live view for currently selected city
         const currentCity = document.getElementById('city-selector').value;
         updateLiveForecast(currentCity);
     }
 }
 
 // 3. live strategic engine
-// handles the T+3 forecast cards and the predictive preheating logic
 async function updateLiveForecast(city = "Maastricht") {
     try {
-        // passing city as a query parameter to the backend relay
         const response = await fetch(`${RELAY_URL}?city=${city}`);
         const forecastData = await response.json();
 
@@ -59,6 +55,7 @@ async function updateLiveForecast(city = "Maastricht") {
             const isAlert = point.score > THRESHOLD;
             if (isAlert) preheatNeeded = true;
 
+            // Update main dashboard metrics with the first point (Now)
             if (index === 0) {
                 const tempEl = document.getElementById('temp');
                 const windEl = document.getElementById('wind');
@@ -66,13 +63,16 @@ async function updateLiveForecast(city = "Maastricht") {
                 if (windEl) windEl.innerText = `${point.wind} m/s`;
             }
 
-            const label = index === 0 ? 'Now' : `+${index * 3}h`;
+            // Constructing the icon URL from OpenWeather
+            const iconUrl = `https://openweathermap.org/img/wn/${point.icon}@2x.png`;
 
             const card = document.createElement('div');
             card.className = `forecast-card ${isAlert ? 'trigger-warning' : ''}`;
             card.innerHTML = `
-                <p style="color: var(--text-dim); font-size: 0.7rem; margin: 0 0 10px 0; text-transform: uppercase;">${label}</p>
+                <p style="color: var(--text-dim); font-size: 0.7rem; margin: 0 0 5px 0; text-transform: uppercase;">${point.hour}</p>
+                <img src="${iconUrl}" alt="Weather Icon" style="width: 50px; height: 50px; margin: 0 auto;">
                 <span style="font-size: 1.4rem; font-weight: bold; display: block;">${point.temp}°C</span>
+                <p style="font-size: 0.75rem; color: var(--accent-color); margin: 5px 0; font-weight: 500;">${point.condition}</p>
                 <span style="color: var(--text-dim); font-size: 0.8rem;">${point.wind} m/s</span>
                 <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                     <span class="score-text" style="font-size: 0.9rem; font-weight: bold; color: ${isAlert ? 'orange' : 'var(--accent-color)'};">${point.score}</span>
@@ -98,13 +98,10 @@ async function updateLiveForecast(city = "Maastricht") {
 
     } catch (err) {
         console.log("live forecast relay failed:", err);
-        const container = document.getElementById('forecast-row');
-        if (container) container.innerHTML = '<p style="color: var(--text-dim);">Awaiting data stream...</p>';
     }
 }
 
 // 4. historical engine
-// fetches march data to show the potential savings lab
 async function updateHistoricalData() {
     try {
         const response = await fetch(ARCHIVE_URL);
@@ -112,13 +109,10 @@ async function updateHistoricalData() {
 
         if (Array.isArray(graphData) && myChart) {
             myChart.data.datasets[1].data = graphData.map(day => day.trigger_score);
-
-            // update chart colors based on current theme for readability
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             myChart.options.scales.x.ticks.color = isLight ? '#555' : '#888';
             myChart.options.scales.y.ticks.color = isLight ? '#555' : '#888';
             myChart.options.plugins.legend.labels.color = isLight ? '#1a1a1a' : 'white';
-
             myChart.update();
 
             let totalActual = 0;
@@ -138,7 +132,6 @@ async function updateHistoricalData() {
 }
 
 // 5. theme toggle engine
-// handles the switch between dark and light modes via css variables
 function initTheme() {
     const themeBtn = document.getElementById('theme-toggle');
     if (!themeBtn) return;
@@ -146,11 +139,8 @@ function initTheme() {
     themeBtn.addEventListener('click', () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('selected-theme', newTheme);
-
-        // refresh chart if visible to update label colors
         if (myChart) updateHistoricalData();
     });
 
@@ -161,22 +151,18 @@ function initTheme() {
 }
 
 // 6. city selector engine
-// initializes the dropdown listener to update data on change
 function initCitySelector() {
     const citySelector = document.getElementById('city-selector');
     if (!citySelector) return;
 
     citySelector.addEventListener('change', (e) => {
         const selectedCity = e.target.value;
-        // update the heading text
         document.getElementById('city-name').innerText = `${selectedCity} Weather`;
-        // trigger a new fetch for the new location
         updateLiveForecast(selectedCity);
     });
 }
 
 // 7. boot up logic
-// initializes engines, chart, and starts the refresh cycle
 window.onload = () => {
     initTheme();
     initCitySelector();
@@ -227,9 +213,9 @@ window.onload = () => {
 
     switchTab('live');
 
-    // update every 60 seconds using the currently selected city
+    // Refresh interval set to 3 hours (10800000 ms) to match forecast logic
     setInterval(() => {
         const currentCity = document.getElementById('city-selector').value;
         updateLiveForecast(currentCity);
-    }, 60000);
+    }, 10800000);
 };

@@ -8,7 +8,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dashboard/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dashboard/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/script.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_relay/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/data_relay/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/style.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logic_engine/live_weather.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic_engine/live_weather.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
