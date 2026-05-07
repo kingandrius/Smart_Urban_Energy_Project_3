@@ -1,14 +1,17 @@
 import os
+import sys
+import json
 import requests
 from dotenv import load_dotenv
 
-# load the secrets from the .env file
-load_dotenv()
+# Load .env from Code folder (two levels up from logic_engine)
+env_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
+load_dotenv(env_path)
 
 
 def calculate_trigger_value(temp, wind_speed, indoor_target=20):
     """
-    implements the formula from image_ab0635.png:
+    implements the design document formula:
     trigger_value = (indoor_target - forecast_temp) * (1 + wind_speed / 50)
     """
     temp_gap = indoor_target - temp
@@ -19,6 +22,14 @@ def calculate_trigger_value(temp, wind_speed, indoor_target=20):
 def fetch_weather_data(city_name):
     # grab the key from the environment
     api_key = os.getenv("WEATHER_API_KEY")
+    
+    # DEBUG: Print what we loaded to stderr so stdout remains valid JSON
+    if not api_key:
+        print("ERROR: WEATHER_API_KEY not found in environment", file=sys.stderr)
+        return None
+    
+    print(f"DEBUG: Using API key: {api_key[:10]}...", file=sys.stderr)
+    
     # we switch to 'forecast' to see the future (t+3)
     base_url = "http://api.openweathermap.org/data/2.5/forecast"
 
@@ -54,24 +65,30 @@ def fetch_weather_data(city_name):
             if future_trigger > (current_trigger * 1.15):
                 preheat_status = True
 
-            # 5. pack it all up for the node.js relay
+            # 5. pack it all up with frontend-compatible field names
+            # Convert trigger_value to 0-1 scale for opt_index (clamped)
+            opt_index = min(max((current_trigger + 5) / 10, 0.1), 0.9)
+            
+            # Generate recommendation based on conditions
+            if preheat_status:
+                recommendation = "Preheat Recommended - Cold Spike Predicted"
+            elif opt_index >= 0.7:
+                recommendation = "Maximum Savings Mode"
+            elif opt_index >= 0.4:
+                recommendation = "Smart Efficiency Mode"
+            else:
+                recommendation = "Standard Grid Mode"
+            
             clean_data = {
                 "city": raw_data['city'].get("name"),
-                "temp": curr_temp,
+                "temperature": curr_temp,
                 "wind_speed": curr_wind,
-                "condition": current_weather['weather'][0].get("description"),
+                "conditions": current_weather['weather'][0].get("description"),
+                "opt_index": round(opt_index, 2),
+                "recommendation": recommendation,
                 "trigger_value": round(current_trigger, 2),
                 "preheat_status": preheat_status
             }
-
-            # send the clean data to the node.js relay (tier 2)
-            relay_url = "http://localhost:3000/update-weather"
-            relay_response = requests.post(relay_url, json=clean_data)
-
-            if relay_response.status_code == 200:
-                print(f"Logic Engine: Current Trigger is {clean_data['trigger_value']}")
-                print(f"Logic Engine: Preheat Status is {preheat_status}")
-                print(f"Data successfully relayed to Tier 2 for {clean_data['city']}")
 
             return clean_data
         else:
@@ -81,5 +98,12 @@ def fetch_weather_data(city_name):
 
 
 if __name__ == "__main__":
-    # testing the predictive engine for your home city
-    fetch_weather_data("Maastricht")
+    # Accept city from command line argument
+    city = sys.argv[1] if len(sys.argv) > 1 else "Maastricht"
+    data = fetch_weather_data(city)
+    
+    # Output as JSON to stdout for Node.js to capture
+    if data:
+        print(json.dumps(data))
+    else:
+        print(json.dumps({"error": "Failed to fetch weather data"}))

@@ -23,6 +23,13 @@ app.get('/status', (req, res) => {
 // Historical Endpoint: Reads JSON files from logic_engine folder
 app.get('/weather', (req, res) => {
     const month = (req.query.month || 'march').toLowerCase();
+    
+    // Validate month to prevent path traversal attacks
+    const validMonths = ['january', 'february', 'march'];
+    if (!validMonths.includes(month)) {
+        return res.status(400).json({ error: 'Invalid month. Use: january, february, or march' });
+    }
+    
     const fileName = `${month}_analysis.json`;
 
     // Path updated to point into /logic_engine/
@@ -41,12 +48,12 @@ app.get('/weather', (req, res) => {
     });
 });
 
-// Live Weather Endpoint: Triggers Python logic from logic_engine folder
+// Live Weather Endpoint: Triggers Python weather service from logic_engine folder
 app.get('/live-weather', (req, res) => {
     const city = req.query.city || 'Maastricht';
 
-    // Path updated to find the script inside /logic_engine/
-    const scriptPath = path.join(__dirname, 'logic_engine', 'live_weather.py');
+    // Path to weather service that fetches real API data
+    const scriptPath = path.join(__dirname, 'logic_engine', 'weather_service.py');
 
     // Note: Azure Linux uses 'python3', Windows uses 'python'
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
@@ -55,6 +62,16 @@ app.get('/live-weather', (req, res) => {
 
     let dataString = '';
     let errorString = '';
+    let responsesSent = false;
+
+    // Add 5-second timeout to prevent hanging requests
+    const timeout = setTimeout(() => {
+        if (!responsesSent) {
+            pythonProcess.kill();
+            responsesSent = true;
+            res.status(500).json({ error: "Python process timeout" });
+        }
+    }, 5000);
 
     pythonProcess.stdout.on('data', (data) => {
         dataString += data.toString();
@@ -65,8 +82,15 @@ app.get('/live-weather', (req, res) => {
     });
 
     pythonProcess.on('close', (code) => {
+        clearTimeout(timeout);
+        
+        if (responsesSent) return; // Already sent timeout response
+        responsesSent = true;
+        
+        console.log(`Python exit code: ${code}`);
+        console.log(`Python stdout: ${dataString}`);
         if (errorString) {
-            console.error(`Python Logic Error: ${errorString}`);
+            console.error(`Python stderr: ${errorString}`);
         }
 
         try {
