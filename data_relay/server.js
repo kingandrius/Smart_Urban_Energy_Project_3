@@ -1,111 +1,84 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
+const fs = require('fs/promises');
 const path = require('path');
 const { spawn } = require('child_process');
 const app = express();
-const PORT = process.env.PORT || 3000; // Updated for Azure (Azure sets its own port)
+const PORT = process.env.PORT || 3000;
 
-// 1. House Rules
 app.use(cors());
 app.use(express.json());
-
-// Point to the 'dashboard' folder for the frontend
 app.use(express.static(path.join(__dirname, 'dashboard')));
 
-// 2. The Endpoints
-
-// Status Check
 app.get('/status', (req, res) => {
-    res.send('Data Relay is up and running in the cloud!');
+    res.send('Data Relay is alive and ready.');
 });
 
-// Historical Endpoint: Reads JSON files from logic_engine folder
-app.get('/weather', (req, res) => {
+const validMonths = new Set(['january', 'february', 'march']);
+app.get('/weather', async (req, res) => {
     const month = (req.query.month || 'march').toLowerCase();
-    
-    // Validate month to prevent path traversal attacks
-    const validMonths = ['january', 'february', 'march'];
-    if (!validMonths.includes(month)) {
-        return res.status(400).json({ error: 'Invalid month. Use: january, february, or march' });
+    if (!validMonths.has(month)) {
+        return res.status(400).json({ error: 'Pick january, february, or march.' });
     }
-    
-    const fileName = `${month}_analysis.json`;
 
-    // Path updated to point into /logic_engine/
-    const dataPath = path.join(__dirname, 'logic_engine', fileName);
+    const dataPath = path.join(__dirname, 'logic_engine', `${month}_analysis.json`);
 
-    console.log(`Relay: Accessing ${dataPath}`);
-
-    fs.readFile(dataPath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(`Missing file: ${fileName}`);
-            return res.status(404).json({
-                error: `Data for ${month} not found in logic_engine.`
-            });
-        }
-        res.json(JSON.parse(data));
-    });
+    try {
+        const contents = await fs.readFile(dataPath, 'utf8');
+        res.json(JSON.parse(contents));
+    } catch (err) {
+        console.error('history file error:', err.message);
+        res.status(404).json({ error: `No saved data for ${month}.` });
+    }
 });
 
-// Live Weather Endpoint: Triggers Python weather service from logic_engine folder
 app.get('/live-weather', (req, res) => {
-    const city = req.query.city || 'Maastricht';
-
-    // Path to weather service that fetches real API data
+    const city = (req.query.city || 'Maastricht').trim();
     const scriptPath = path.join(__dirname, 'logic_engine', 'weather_service.py');
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
 
-    // Note: Azure Linux uses 'python3', Windows uses 'python'
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const python = spawn(pythonCmd, [scriptPath, city]);
+    let stdout = '';
+    let stderr = '';
+    let finished = false;
 
-    const pythonProcess = spawn(pythonCmd, [scriptPath, city]);
-
-    let dataString = '';
-    let errorString = '';
-    let responsesSent = false;
-
-    // Add 5-second timeout to prevent hanging requests
     const timeout = setTimeout(() => {
-        if (!responsesSent) {
-            pythonProcess.kill();
-            responsesSent = true;
-            res.status(500).json({ error: "Python process timeout" });
-        }
+        if (finished) return;
+        finished = true;
+        python.kill();
+        res.status(500).json({ error: 'Weather fetch timed out.' });
     }, 5000);
 
-    pythonProcess.stdout.on('data', (data) => {
-        dataString += data.toString();
-    });
+    python.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+    python.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
 
-    pythonProcess.stderr.on('data', (data) => {
-        errorString += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
+    python.on('error', (err) => {
+        if (finished) return;
+        finished = true;
         clearTimeout(timeout);
-        
-        if (responsesSent) return; // Already sent timeout response
-        responsesSent = true;
-        
-        console.log(`Python exit code: ${code}`);
-        console.log(`Python stdout: ${dataString}`);
-        if (errorString) {
-            console.error(`Python stderr: ${errorString}`);
+        console.error('Failed to start Python:', err.message);
+        res.status(500).json({ error: 'Python process failed to start.' });
+    });
+
+    python.on('close', (code) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
+
+        if (stderr) console.error('Python stderr:', stderr.trim());
+        if (!stdout) {
+            return res.status(500).json({ error: 'No response from weather service.' });
         }
 
         try {
-            if (dataString) {
-                res.json(JSON.parse(dataString));
-            } else {
-                res.status(500).json({ error: "No data from Python" });
-            }
-        } catch (e) {
-            res.status(500).json({ error: "Parsing error" });
+            res.json(JSON.parse(stdout));
+        } catch (parseErr) {
+            console.error('JSON parse error:', parseErr.message, stdout);
+            res.status(500).json({ error: 'Invalid JSON from weather service.' });
         }
     });
 });
 
-// 3. Fire it up
 app.listen(PORT, () => {
-    console.log(`Relay server working on port ${PORT}`);
+    console.log(`Relay server running on port ${PORT}`);
 });

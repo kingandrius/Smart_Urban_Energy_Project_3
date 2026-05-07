@@ -24,8 +24,9 @@ async function fetchLiveWeather() {
     resultDiv.innerHTML = `<p>🔄 Querying Engine...</p>`;
 
     try {
-        // REMOVED http://localhost:3000
+        // call the local relay route and get back real weather data
         const response = await fetch(`/live-weather?city=${city}`);
+        if (!response.ok) throw new Error('live-weather request failed');
         const data = await response.json();
 
         resultDiv.innerHTML = `
@@ -37,7 +38,10 @@ async function fetchLiveWeather() {
                 Recommendation: ${data.recommendation}
             </div>
         `;
-    } catch (err) { resultDiv.innerHTML = `<p style="color:red">Engine communication failed.</p>`; }
+    } catch (err) {
+        console.error('live weather error', err);
+        resultDiv.innerHTML = `<p style="color:red">Engine communication failed.</p>`;
+    }
 }
 
 function updateChart(data, monthName) {
