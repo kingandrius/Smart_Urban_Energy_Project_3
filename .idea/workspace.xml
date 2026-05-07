@@ -6,10 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="989b40fc-177d-4cf3-a8ca-faf292a72590" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/script.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logic_engine/live_weather.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic_engine/live_weather.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/script.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/style.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_relay/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/data_relay/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/bridge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/live_weather.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/march_analysis.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/march_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/optimizer_analysis.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/weather_raw.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic_engine/weather_service.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,21 +33,21 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "kingandrius"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;kingandrius&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/kingandrius/Smart_Urban_Energy_Project_3.git",
-    "accountId": "ec9f263b-87b2-4b8f-a891-be2abbcaa561"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/kingandrius/Smart_Urban_Energy_Project_3.git&quot;,
+    &quot;accountId&quot;: &quot;ec9f263b-87b2-4b8f-a891-be2abbcaa561&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="3DFMuuIUQgfGUwatpBR7s1ghMs8" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -49,21 +56,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.bridge.executor": "Run",
-    "Python.live_weather.executor": "Run",
-    "Python.weather_service.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
-    "junie.onboarding.icon.badge.shown": "true",
-    "to.speed.mode.migration.done": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.bridge.executor&quot;: &quot;Run&quot;,
+    &quot;Python.live_weather.executor&quot;: &quot;Run&quot;,
+    &quot;Python.weather_service.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;stable-dashboard&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Andy/Desktop/fontys/semester 1/project 3/Code&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="bridge" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Code" />

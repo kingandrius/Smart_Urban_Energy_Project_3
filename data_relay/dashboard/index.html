@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Optimizer Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Energy Optimizer Dashboard</h1>
+            <p>Vandebron Data Analysis & Cost Optimization</p>
+        </header>
+
+        <div class="period-selector">
+            <label for="monthSelect">Select Analysis Period: </label>
+            <select id="monthSelect" onchange="changeMonth(this.value)">
+                <option value="january">January 2026</option>
+                <option value="february">February 2026</option>
+                <option value="march" selected>March 2026</option>
+            </select>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Historical Section -->
+            <div class="card">
+                <h2>Historical Cost Analysis (<span id="month-label">March</span>)</h2>
+                <div class="savings-display">
+                    <h3>Estimated Savings: <span id="total-savings">€0.00</span></h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Live Weather & Strategy Guide -->
+            <div class="card">
+                <h2>Live Strategic Weather</h2>
+                <div class="live-controls">
+                    <input type="text" id="cityInput" placeholder="Enter city (e.g., Maastricht)">
+                    <button class="btn-check" onclick="fetchLiveWeather()">Check City</button>
+                </div>
+
+                <div id="liveResult" class="live-box">
+                    <p>Enter a city to trigger the Logic Engine.</p>
+                </div>
+
+                <div class="index-legend">
+                    <h4>Optimization Strategy Guide</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-index">Index</th>
+                                <th class="col-strat">Strategy</th>
+                                <th>What this means for you</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="nowrap">0.7 - 1.0</td>
+                                <td class="text-aggressive">Aggressive</td>
+                                <td><strong>Max Savings:</strong> Using 100% green energy to cut your bill.</td>
+                            </tr>
+                            <tr>
+                                <td class="nowrap">0.4 - 0.6</td>
+                                <td class="text-balanced">Balanced</td>
+                                <td><strong>Smart Mix:</strong> Automatically avoiding high-cost peak hours.</td>
+                            </tr>
+                            <tr>
+                                <td class="nowrap">0.0 - 0.3</td>
+                                <td class="text-standard">Standard</td>
+                                <td><strong>Normal Mode:</strong> Relying on the grid during low-yield times.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

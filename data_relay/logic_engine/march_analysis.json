@@ -1,0 +1,157 @@
+[
+    {
+        "timestamp": "2026-03-01",
+        "actual_cost": 2.32,
+        "optimized_cost": 1.86
+    },
+    {
+        "timestamp": "2026-03-02",
+        "actual_cost": 3.12,
+        "optimized_cost": 2.5
+    },
+    {
+        "timestamp": "2026-03-03",
+        "actual_cost": 4.61,
+        "optimized_cost": 2.31
+    },
+    {
+        "timestamp": "2026-03-04",
+        "actual_cost": 2.1,
+        "optimized_cost": 1.68
+    },
+    {
+        "timestamp": "2026-03-05",
+        "actual_cost": 3.71,
+        "optimized_cost": 2.97
+    },
+    {
+        "timestamp": "2026-03-06",
+        "actual_cost": 2.12,
+        "optimized_cost": 1.48
+    },
+    {
+        "timestamp": "2026-03-07",
+        "actual_cost": 1.69,
+        "optimized_cost": 1.18
+    },
+    {
+        "timestamp": "2026-03-08",
+        "actual_cost": 2.35,
+        "optimized_cost": 1.88
+    },
+    {
+        "timestamp": "2026-03-09",
+        "actual_cost": 1.74,
+        "optimized_cost": 0.87
+    },
+    {
+        "timestamp": "2026-03-10",
+        "actual_cost": 4.05,
+        "optimized_cost": 3.24
+    },
+    {
+        "timestamp": "2026-03-11",
+        "actual_cost": 3.57,
+        "optimized_cost": 2.5
+    },
+    {
+        "timestamp": "2026-03-12",
+        "actual_cost": 2.69,
+        "optimized_cost": 1.88
+    },
+    {
+        "timestamp": "2026-03-13",
+        "actual_cost": 2.02,
+        "optimized_cost": 1.41
+    },
+    {
+        "timestamp": "2026-03-14",
+        "actual_cost": 4.48,
+        "optimized_cost": 3.58
+    },
+    {
+        "timestamp": "2026-03-15",
+        "actual_cost": 2.46,
+        "optimized_cost": 1.97
+    },
+    {
+        "timestamp": "2026-03-16",
+        "actual_cost": 4.65,
+        "optimized_cost": 2.33
+    },
+    {
+        "timestamp": "2026-03-17",
+        "actual_cost": 3.37,
+        "optimized_cost": 2.36
+    },
+    {
+        "timestamp": "2026-03-18",
+        "actual_cost": 3.54,
+        "optimized_cost": 2.83
+    },
+    {
+        "timestamp": "2026-03-19",
+        "actual_cost": 1.54,
+        "optimized_cost": 1.08
+    },
+    {
+        "timestamp": "2026-03-20",
+        "actual_cost": 2.91,
+        "optimized_cost": 1.46
+    },
+    {
+        "timestamp": "2026-03-21",
+        "actual_cost": 4.7,
+        "optimized_cost": 2.35
+    },
+    {
+        "timestamp": "2026-03-22",
+        "actual_cost": 1.89,
+        "optimized_cost": 1.32
+    },
+    {
+        "timestamp": "2026-03-23",
+        "actual_cost": 2.19,
+        "optimized_cost": 1.09
+    },
+    {
+        "timestamp": "2026-03-24",
+        "actual_cost": 2.79,
+        "optimized_cost": 2.23
+    },
+    {
+        "timestamp": "2026-03-25",
+        "actual_cost": 2.08,
+        "optimized_cost": 1.46
+    },
+    {
+        "timestamp": "2026-03-26",
+        "actual_cost": 2.24,
+        "optimized_cost": 1.79
+    },
+    {
+        "timestamp": "2026-03-27",
+        "actual_cost": 4.6,
+        "optimized_cost": 3.22
+    },
+    {
+        "timestamp": "2026-03-28",
+        "actual_cost": 2.2,
+        "optimized_cost": 1.76
+    },
+    {
+        "timestamp": "2026-03-29",
+        "actual_cost": 2.46,
+        "optimized_cost": 1.23
+    },
+    {
+        "timestamp": "2026-03-30",
+        "actual_cost": 1.86,
+        "optimized_cost": 1.49
+    },
+    {
+        "timestamp": "2026-03-31",
+        "actual_cost": 3.93,
+        "optimized_cost": 2.75
+    }
+]

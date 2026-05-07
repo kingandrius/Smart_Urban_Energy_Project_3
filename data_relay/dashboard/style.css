@@ -1,0 +1,38 @@
+body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; }
+.container { max-width: 1250px; margin: 0 auto; } /* Slightly wider container */
+header { text-align: center; margin-bottom: 20px; }
+
+.period-selector { text-align: center; margin-bottom: 25px; color: #7f8c8d; }
+#monthSelect { padding: 8px 15px; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; }
+
+.dashboard-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 25px; }
+.card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+
+.savings-display { background-color: #f1f9f1; border: 1px solid #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+#total-savings { color: #2e7d32; font-weight: 800; font-size: 1.6rem; }
+
+.live-controls { display: flex; gap: 10px; margin-bottom: 20px; }
+#cityInput { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+.btn-check { padding: 10px 15px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+.live-box { background: #fff; border-left: 6px solid #4bc0c0; padding: 15px; border: 1px solid #eee; margin-bottom: 15px; min-height: 140px; }
+.index-bubble { background: #2c3e50; color: white; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+.recommendation-box { margin-top: 10px; padding: 12px; background: #e0f7fa; border-radius: 5px; color: #006064; font-weight: bold; }
+
+/* Fixed the legend table width and wrapping issues */
+.index-legend { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ddd; }
+.index-legend h4 { margin: 0 0 10px 0; font-size: 0.75rem; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px; }
+.index-legend table { width: 100%; border-collapse: collapse; font-size: 0.8rem; line-height: 1.4; }
+.index-legend th { text-align: left; padding-bottom: 10px; border-bottom: 1px solid #eee; color: #7f8c8d; font-weight: 600; }
+.index-legend td { padding: 12px 5px 12px 0; border-bottom: 1px solid #f9f9f9; vertical-align: top; }
+
+/* Force column spacing */
+.col-index { width: 75px; }
+.col-strat { width: 90px; }
+.nowrap { white-space: nowrap; }
+
+.text-aggressive { color: #2e7d32; font-weight: bold; }
+.text-balanced { color: #f39c12; font-weight: bold; }
+.text-standard { color: #2c3e50; font-weight: bold; }
+
+.chart-container { height: 350px; width: 100%; }
