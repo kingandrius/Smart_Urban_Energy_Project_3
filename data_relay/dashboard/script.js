@@ -137,14 +137,32 @@ function updateChart(data, monthName) {
             plugins: {
                 legend: {
                     labels: { color: textColor }
+                },
+                title: {
+                    display: true,
+                    text: 'Daily Energy Cost Comparison',
+                    color: textColor,
+                    font: { size: 18 }
                 }
             },
             scales: {
                 y: {
+                    title: {
+                        display: true,
+                        text: 'Cost (€)',
+                        color: textColor,
+                        font: { size: 14 }
+                    },
                     ticks: { color: textColor },
                     grid: { color: gridColor }
                 },
                 x: {
+                    title: {
+                        display: true,
+                        text: 'Day of Month',
+                        color: textColor,
+                        font: { size: 14 }
+                    },
                     ticks: { color: textColor },
                     grid: { color: gridColor }
                 }
